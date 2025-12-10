@@ -14,7 +14,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class PaystackInitializeRequest {
     private String email;
-    private String amount; // in kobo
+    private Integer amount; // in kobo
     private String reference;
 
     @JsonProperty("callback_url")

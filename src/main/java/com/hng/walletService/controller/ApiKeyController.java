@@ -7,6 +7,7 @@ import com.hng.walletService.model.dto.response.ApiResponse;
 import com.hng.walletService.model.entity.UserEntity;
 import com.hng.walletService.service.ApiKeyService;
 import com.hng.walletService.service.CustomUserDetailsService;
+import com.hng.walletService.util.AuthenticationUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,6 +29,7 @@ public class ApiKeyController {
 
     private final ApiKeyService apiKeyService;
     private final CustomUserDetailsService userDetailsService;
+    private final AuthenticationUtil authenticationUtil;
 
     @PostMapping("/create")
     @Operation(
@@ -38,7 +40,9 @@ public class ApiKeyController {
             @Valid @RequestBody CreateApiKeyRequest request,
             Authentication authentication) {
         try {
-            UserEntity user = userDetailsService.getUserByEmail(authentication.getName());
+//            log.info("Authentication {}", authentication);
+            String email = authenticationUtil.extractEmail(authentication);
+            UserEntity user = userDetailsService.getUserByEmail(email);
             ApiKeyResponse response = apiKeyService.createApiKey(user, request);
 
             log.info("API key created successfully for user: {}", user.getEmail());
@@ -65,7 +69,8 @@ public class ApiKeyController {
             @Valid @RequestBody RolloverApiKeyRequest request,
             Authentication authentication) {
         try {
-            UserEntity user = userDetailsService.getUserByEmail(authentication.getName());
+            String email = authenticationUtil.extractEmail(authentication);
+            UserEntity user = userDetailsService.getUserByEmail(email);
             ApiKeyResponse response = apiKeyService.rolloverApiKey(user, request);
 
             log.info("API key rolled over successfully for user: {}", user.getEmail());
@@ -89,7 +94,8 @@ public class ApiKeyController {
     )
     public ResponseEntity<ApiResponse<?>> listApiKeys(Authentication authentication) {
         try {
-            UserEntity user = userDetailsService.getUserByEmail(authentication.getName());
+            String email = authenticationUtil.extractEmail(authentication);
+            UserEntity user = userDetailsService.getUserByEmail(email);
             var apiKeys = apiKeyService.getUserApiKeys(user);
 
             return ResponseEntity.ok(ApiResponse.success(apiKeys));
@@ -109,7 +115,8 @@ public class ApiKeyController {
             @PathVariable Long keyId,
             Authentication authentication) {
         try {
-            UserEntity user = userDetailsService.getUserByEmail(authentication.getName());
+            String email = authenticationUtil.extractEmail(authentication);
+            UserEntity user = userDetailsService.getUserByEmail(email);
             apiKeyService.revokeApiKey(keyId, user);
 
             log.info("API key revoked successfully for user: {}", user.getEmail());

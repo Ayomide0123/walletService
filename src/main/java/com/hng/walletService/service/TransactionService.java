@@ -57,6 +57,8 @@ public class TransactionService {
                 reference
         );
 
+        log.info("paystackResponse {}", paystackResponse);
+
         // Update transaction with Paystack details
         transaction.setPaystackReference(paystackResponse.getData().getReference());
         transaction.setAuthorizationUrl(paystackResponse.getData().getAuthorizationUrl());

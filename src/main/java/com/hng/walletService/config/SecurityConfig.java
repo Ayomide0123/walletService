@@ -18,32 +18,31 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final ApiKeyAuthenticationFilter apiKeyAuthFilter;
+    private final OAuth2SuccessHandler oAuth2SuccessHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // Public endpoints - no authentication needed
                         .requestMatchers(
                                 "/auth/**",
+                                "/oauth2/**",
+                                "/login/oauth2/**",
                                 "/wallet/paystack/webhook",
-                                // Swagger/OpenAPI endpoints
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html",
-                                "/webjars/**",
-                                "/swagger-resources/**",
-                                "/configuration/**"
+                                "/error"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 )
                 .oauth2Login(oauth2 -> oauth2
-                        .loginPage("/auth/google")
-                        .defaultSuccessUrl("/auth/google/callback", true)
+                        .successHandler(oAuth2SuccessHandler)
+                        .failureUrl("/auth/google?error=true")
                 )
                 .addFilterBefore(apiKeyAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

@@ -30,7 +30,7 @@ public class AuthService {
         UserEntity user = userRepository.findByGoogleId(googleId)
                 .orElseGet(() -> createNewUser(email, name, googleId, picture));
 
-        // Create wallet if doesn't exist
+        // Create wallet if it doesn't exist
         try {
             walletService.getWalletByUser(user);
         } catch (RuntimeException e) {

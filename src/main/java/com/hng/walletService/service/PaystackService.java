@@ -35,7 +35,8 @@ public class PaystackService {
 
     public PaystackInitializeResponse initializeTransaction(String email, BigDecimal amount, String reference) {
         // Convert amount to kobo (multiply by 100)
-        String amountInKobo = amount.multiply(new BigDecimal("100")).toPlainString();
+        int amountInKobo = amount.multiply(new BigDecimal(100)).intValueExact();
+
 
         PaystackInitializeRequest request = PaystackInitializeRequest.builder()
                 .email(email)
@@ -43,6 +44,8 @@ public class PaystackService {
                 .reference(reference)
                 .callbackUrl(callbackUrl)
                 .build();
+        log.info("Paystack PaystackInitializeRequest: {}", request);
+
 
         WebClient webClient = webClientBuilder
                 .baseUrl(baseUrl)
@@ -58,6 +61,7 @@ public class PaystackService {
                     .bodyToMono(PaystackInitializeResponse.class)
                     .block();
 
+            log.info("Paystack PaystackInitializeResponse: {}", response);
             log.info("Paystack transaction initialized: {}", reference);
             return response;
         } catch (Exception e) {

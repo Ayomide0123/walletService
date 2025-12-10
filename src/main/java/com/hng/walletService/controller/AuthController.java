@@ -3,61 +3,67 @@ package com.hng.walletService.controller;
 import com.hng.walletService.model.dto.response.ApiResponse;
 import com.hng.walletService.model.dto.response.JwtResponse;
 import com.hng.walletService.service.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 @Slf4j
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
-@Tag(
-        name = "Authentication",
-        description = "Google OAuth2 login and JWT issuance for the wallet service."
-)
+@Tag(name = "Authentication", description = "Google OAuth authentication endpoints")
 public class AuthController {
 
     private final AuthService authService;
 
     @GetMapping("/google")
     @Operation(
-            summary = "Get Google OAuth2 authorization URL",
-            description = """
-            Returns the Google OAuth2 authorization URL used to start the login flow.
-            Typically, the frontend will redirect the user to this URL.
-            """
+            summary = "Initiate Google OAuth login",
+            description = "Returns the URL to start Google OAuth login"
     )
     public ApiResponse<String> googleLogin() {
+        // Frontend can redirect the user to this URL
         return ApiResponse.success("Redirect to Google OAuth", "/oauth2/authorization/google");
     }
 
     @GetMapping("/google/callback")
     @Operation(
-            summary = "Google OAuth2 callback",
-            description = """
-            Callback endpoint invoked after a successful Google OAuth2 login.
-            Exchanges the authenticated Google user information for a JWT token.
-            
-            This endpoint is typically called by Spring Security as part of the OAuth2 flow.
-            On success, returns a JWT that can be used to authenticate subsequent API requests.
-            """
+            summary = "Google OAuth callback",
+            description = "Receives JWT token from OAuth2 success handler"
     )
-    public ApiResponse<JwtResponse> googleCallback(@AuthenticationPrincipal OAuth2User oAuth2User) {
-        if (oAuth2User == null) {
-            return ApiResponse.error("Authentication failed");
+    public ApiResponse<JwtResponse> googleCallback(
+            @RequestParam(required = false) String token,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String error) {
+
+        if (error != null) {
+            log.error("Google OAuth error: {}", error);
+            return ApiResponse.error("Google authentication failed: " + error);
         }
 
-        JwtResponse response = authService.handleGoogleCallback(oAuth2User);
-        return ApiResponse.success("Login successful", response);
+        if (token == null) {
+            log.error("No token supplied in callback");
+            return ApiResponse.error("Authentication failed - no token received");
+        }
+
+        JwtResponse jwtResponse = JwtResponse.builder()
+                .token(token)
+                .type("Bearer")
+                .email(email)
+                .name(name)
+                .build();
+
+        log.info("User authenticated successfully via callback: {}", email);
+
+        return ApiResponse.success("Login successful", jwtResponse);
     }
 }
+

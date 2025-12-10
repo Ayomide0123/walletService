@@ -48,10 +48,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // Extract JWT token
         jwt = authHeader.substring(7);
+        log.info("JWT TOKEN: {}", jwt);
 
         try {
             // Extract email from token
             userEmail = jwtUtil.extractEmail(jwt);
+            log.info("Email: " + userEmail);
 
             // If email is present and user is not already authenticated
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
