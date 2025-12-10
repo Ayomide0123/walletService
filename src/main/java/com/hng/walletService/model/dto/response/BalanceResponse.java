@@ -1,5 +1,6 @@
 package com.hng.walletService.model.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,5 +14,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class BalanceResponse {
     private BigDecimal balance;
+
+    @JsonIgnore
     private String walletNumber;
 }

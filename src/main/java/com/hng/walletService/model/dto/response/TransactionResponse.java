@@ -1,5 +1,6 @@
 package com.hng.walletService.model.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,12 +14,22 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TransactionResponse {
-    private String reference;
     private String type;
     private BigDecimal amount;
     private String status;
+
+    @JsonIgnore
+    private String reference;
+
+    @JsonIgnore
     private String description;
+
+    @JsonIgnore
     private String recipientWalletNumber;
+
+    @JsonIgnore
     private String senderWalletNumber;
+
+    @JsonIgnore
     private LocalDateTime createdAt;
 }

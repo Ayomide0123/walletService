@@ -16,6 +16,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +27,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -60,7 +63,7 @@ public class WalletController {
             Requires JWT authentication or an API key with **deposit** permission.
             """
     )
-    public ApiResponse<DepositResponse> deposit(
+    public ResponseEntity<DepositResponse> deposit(
             @Valid @RequestBody DepositRequest request,
             Authentication authentication,
             HttpServletRequest httpRequest) {
@@ -81,18 +84,21 @@ public class WalletController {
 
             ApiKeyEntity apiKey = (ApiKeyEntity) httpRequest.getAttribute("apiKey");
             if (apiKey != null && !apiKeyService.hasPermission(apiKey, "deposit")) {
-                return ApiResponse.error("API key does not have deposit permission");
+//                return ApiResponse.error("API key does not have deposit permission");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
             String email = authenticationUtil.extractEmail(authentication);
             UserEntity user = userDetailsService.getUserByEmail(email);
 
             DepositResponse response = transactionService.initiateDeposit(user, request);
-            return ApiResponse.success("Deposit initiated successfully", response);
+//            return ApiResponse.success("Deposit initiated successfully", response);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
 
         } catch (Exception e) {
             log.error("Error initiating deposit: {}", e.getMessage());
-            return ApiResponse.error(e.getMessage());
+//            return ApiResponse.error(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -105,7 +111,7 @@ public class WalletController {
             The webhook signature is verified to ensure the request is authentic.
             """
     )
-    public ApiResponse<String> paystackWebhook(
+    public ResponseEntity<Map<String, Object>> paystackWebhook(
             @RequestBody String payload,
             @RequestHeader(value = "x-paystack-signature", required = false) String signature,
             HttpServletRequest request) {
@@ -114,7 +120,9 @@ public class WalletController {
 
             if (signature == null || !paystackService.verifyWebhookSignature(rawBody, signature)) {
                 log.error("Invalid webhook signature");
-                return ApiResponse.error("Invalid signature");
+//                return ApiResponse.error("Invalid signature");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("status", false));
             }
 
             PaystackWebhookPayload webhookPayload = objectMapper.readValue(rawBody, PaystackWebhookPayload.class);
@@ -128,10 +136,13 @@ public class WalletController {
                 log.info("Webhook processed successfully for reference: {}", reference);
             }
 
-            return ApiResponse.success("Webhook processed", "success");
+//            return ApiResponse.success("Webhook processed", "success");
+            return ResponseEntity.ok(Map.of("status", true));
         } catch (Exception e) {
             log.error("Error processing webhook: {}", e.getMessage());
-            return ApiResponse.error(e.getMessage());
+//            return ApiResponse.error(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("status", false));
         }
     }
 
@@ -143,13 +154,15 @@ public class WalletController {
             Returns information about whether the deposit is pending, successful, or failed.
             """
     )
-    public ApiResponse<DepositStatusResponse> getDepositStatus(@PathVariable String reference) {
+    public ResponseEntity<DepositStatusResponse> getDepositStatus(@PathVariable String reference) {
         try {
             DepositStatusResponse response = transactionService.getDepositStatus(reference);
-            return ApiResponse.success(response);
+//            return ApiResponse.success(response);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Error getting deposit status: {}", e.getMessage());
-            return ApiResponse.error(e.getMessage());
+//            return ApiResponse.error(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -161,11 +174,12 @@ public class WalletController {
             Requires JWT authentication or an API key with **read** permission.
             """
     )
-    public ApiResponse<BalanceResponse> getBalance(Authentication authentication, HttpServletRequest httpRequest) {
+    public ResponseEntity<BalanceResponse> getBalance(Authentication authentication, HttpServletRequest httpRequest) {
         try {
             ApiKeyEntity apiKey = (ApiKeyEntity) httpRequest.getAttribute("apiKey");
             if (apiKey != null && !apiKeyService.hasPermission(apiKey, "read")) {
-                return ApiResponse.error("API key does not have read permission");
+//                return ApiResponse.error("API key does not have read permission");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
             String email = authenticationUtil.extractEmail(authentication);
@@ -177,10 +191,12 @@ public class WalletController {
                     .walletNumber(wallet.getWalletNumber())
                     .build();
 
-            return ApiResponse.success(response);
+//            return ApiResponse.success(response);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Error getting balance: {}", e.getMessage());
-            return ApiResponse.error(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+//            return ApiResponse.error(e.getMessage());
         }
     }
 
@@ -193,23 +209,26 @@ public class WalletController {
             Requires JWT authentication or an API key with **transfer** permission.
             """
     )
-    public ApiResponse<TransferResponse> transfer(
+    public ResponseEntity<TransferResponse> transfer(
             @Valid @RequestBody TransferRequest request,
             Authentication authentication,
             HttpServletRequest httpRequest) {
         try {
             ApiKeyEntity apiKey = (ApiKeyEntity) httpRequest.getAttribute("apiKey");
             if (apiKey != null && !apiKeyService.hasPermission(apiKey, "transfer")) {
-                return ApiResponse.error("API key does not have transfer permission");
+//                return ApiResponse.error("API key does not have transfer permission");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
             String email = authenticationUtil.extractEmail(authentication);
             UserEntity user = userDetailsService.getUserByEmail(email);
             TransferResponse response = transactionService.transfer(user, request);
-            return ApiResponse.success("Transfer completed successfully", response);
+//            return ApiResponse.success("Transfer completed successfully", response);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Error processing transfer: {}", e.getMessage());
-            return ApiResponse.error(e.getMessage());
+//            return ApiResponse.error(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -222,22 +241,25 @@ public class WalletController {
             Requires JWT authentication or an API key with **read** permission.
             """
     )
-    public ApiResponse<List<TransactionResponse>> getTransactions(
+    public ResponseEntity<List<TransactionResponse>> getTransactions(
             Authentication authentication,
             HttpServletRequest httpRequest) {
         try {
             ApiKeyEntity apiKey = (ApiKeyEntity) httpRequest.getAttribute("apiKey");
             if (apiKey != null && !apiKeyService.hasPermission(apiKey, "read")) {
-                return ApiResponse.error("API key does not have read permission");
+//                return ApiResponse.error("API key does not have read permission");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
             String email = authenticationUtil.extractEmail(authentication);
             UserEntity user = userDetailsService.getUserByEmail(email);
             List<TransactionResponse> transactions = transactionService.getTransactionHistory(user);
-            return ApiResponse.success(transactions);
+//            return ApiResponse.success(transactions);
+            return ResponseEntity.ok(transactions);
         } catch (Exception e) {
             log.error("Error getting transactions: {}", e.getMessage());
-            return ApiResponse.error(e.getMessage());
+//            return ApiResponse.error(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 

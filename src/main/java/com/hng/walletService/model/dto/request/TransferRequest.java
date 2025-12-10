@@ -1,5 +1,6 @@
 package com.hng.walletService.model.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -19,6 +20,7 @@ public class TransferRequest {
 
     @NotBlank(message = "Wallet number is required")
     @Pattern(regexp = "^\\d{13}$", message = "Wallet number must be 13 digits")
+    @JsonProperty("wallet_number")
     private String walletNumber;
 
     @NotNull(message = "Amount is required")

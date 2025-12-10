@@ -36,7 +36,7 @@ public class ApiKeyController {
             summary = "Create new API key",
             description = "Create a new API key with specific permissions [transfer, deposit, read]. Maximum 5 active keys per user."
     )
-    public ResponseEntity<ApiResponse<ApiKeyResponse>> createApiKey(
+    public ResponseEntity<ApiKeyResponse> createApiKey(
             @Valid @RequestBody CreateApiKeyRequest request,
             Authentication authentication) {
         try {
@@ -47,16 +47,26 @@ public class ApiKeyController {
 
             log.info("API key created successfully for user: {}", user.getEmail());
 
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(ApiResponse.success("API key created successfully", response));
+//            return ResponseEntity.status(HttpStatus.CREATED)
+//                    .body(ApiResponse.success("API key created successfully", response));
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .body(response);
+
         } catch (RuntimeException e) {
             log.error("Error creating API key: {}", e.getMessage());
-            return ResponseEntity.badRequest()
-                    .body(ApiResponse.error(e.getMessage()));
+//            return ResponseEntity.badRequest()
+//                    .body(ApiResponse.error(e.getMessage()));
+            return ResponseEntity
+                    .badRequest()
+                    .build();
         } catch (Exception e) {
             log.error("Unexpected error creating API key: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("An unexpected error occurred"));
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                    .body(ApiResponse.error("An unexpected error occurred"));
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .build();
         }
     }
 
@@ -65,7 +75,7 @@ public class ApiKeyController {
             summary = "Rollover expired API key",
             description = "Create a new API key using the same permissions as an expired key"
     )
-    public ResponseEntity<ApiResponse<ApiKeyResponse>> rolloverApiKey(
+    public ResponseEntity<ApiKeyResponse> rolloverApiKey(
             @Valid @RequestBody RolloverApiKeyRequest request,
             Authentication authentication) {
         try {
@@ -75,15 +85,19 @@ public class ApiKeyController {
 
             log.info("API key rolled over successfully for user: {}", user.getEmail());
 
-            return ResponseEntity.ok(ApiResponse.success("API key rolled over successfully", response));
+            return ResponseEntity.ok(response);
+//            return ResponseEntity.ok(ApiResponse.success("API key rolled over successfully", response));
         } catch (RuntimeException e) {
             log.error("Error rolling over API key: {}", e.getMessage());
-            return ResponseEntity.badRequest()
-                    .body(ApiResponse.error(e.getMessage()));
+//            return ResponseEntity.badRequest()
+//                    .body(ApiResponse.error(e.getMessage()));
+            return ResponseEntity.badRequest().build();
+
         } catch (Exception e) {
             log.error("Unexpected error rolling over API key: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("An unexpected error occurred"));
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                    .body(ApiResponse.error("An unexpected error occurred"));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
