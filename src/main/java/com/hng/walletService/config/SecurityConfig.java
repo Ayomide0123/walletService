@@ -24,7 +24,7 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // Public endpoints - no authentication
+                        // Public endpoints - no authentication needed
                         .requestMatchers(
                                 "/auth/**",
                                 "/wallet/paystack/webhook",
@@ -34,10 +34,7 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/webjars/**",
                                 "/swagger-resources/**",
-                                "/configuration/**",
-                                // Optional: Health check endpoints
-                                "/actuator/health",
-                                "/actuator/info"
+                                "/configuration/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

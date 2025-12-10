@@ -24,17 +24,17 @@ import org.springframework.context.annotation.Configuration;
                         name = "MIT License",
                         url = "https://opensource.org/licenses/MIT"
                 )
-        ),
-        servers = {
-                @Server(
-                        description = "Local Development Server",
-                        url = "http://localhost:8080"
-                ),
-                @Server(
-                        description = "Production Server",
-                        url = "https://api.walletservice.com"
-                )
-        }
+        )
+//        servers = {
+//                @Server(
+//                        description = "Local Development Server",
+//                        url = "http://localhost:8080"
+//                ),
+//                @Server(
+//                        description = "Production Server",
+//                        url = "https://api.walletservice.com"
+//                )
+//        }
 )
 @SecurityScheme(
         name = "Bearer Authentication",
