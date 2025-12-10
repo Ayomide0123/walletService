@@ -35,8 +35,8 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 @RequestMapping("/wallet")
 @RequiredArgsConstructor
 @Tag(
-        name = "Wallet",
-        description = "Operations related to user wallets: deposits, transfers, balance and transaction history."
+        name = "Wallet Management",
+        description = "Endpoint for managing Wallet Operations: deposits, transfers, balance and transaction history."
 )
 @SecurityRequirement(name = "bearerAuth")
 public class WalletController {
@@ -56,7 +56,8 @@ public class WalletController {
             summary = "Initiate deposit",
             description = """
             Initiates a deposit for the authenticated user. 
-            May require an API key with **deposit** permission.
+            Creates a Paystack payment link that the user can use to complete the deposit.
+            Requires JWT authentication or an API key with **deposit** permission.
             """
     )
     public ApiResponse<DepositResponse> deposit(
@@ -100,6 +101,8 @@ public class WalletController {
             summary = "Paystack webhook callback",
             description = """
             Paystack webhook endpoint used by Paystack to notify your service about payment events.
+            This endpoint is called by Paystack servers when a payment status changes.
+            The webhook signature is verified to ensure the request is authentic.
             """
     )
     public ApiResponse<String> paystackWebhook(
@@ -133,6 +136,13 @@ public class WalletController {
     }
 
     @GetMapping("/deposit/{reference}/status")
+    @Operation(
+            summary = "Get deposit status",
+            description = """
+            Retrieves the current status of a deposit transaction using its reference ID.
+            Returns information about whether the deposit is pending, successful, or failed.
+            """
+    )
     public ApiResponse<DepositStatusResponse> getDepositStatus(@PathVariable String reference) {
         try {
             DepositStatusResponse response = transactionService.getDepositStatus(reference);
@@ -144,6 +154,13 @@ public class WalletController {
     }
 
     @GetMapping("/balance")
+    @Operation(
+            summary = "Get wallet balance",
+            description = """
+            Retrieves the current balance and wallet number for the authenticated user.
+            Requires JWT authentication or an API key with **read** permission.
+            """
+    )
     public ApiResponse<BalanceResponse> getBalance(Authentication authentication, HttpServletRequest httpRequest) {
         try {
             ApiKeyEntity apiKey = (ApiKeyEntity) httpRequest.getAttribute("apiKey");
@@ -168,6 +185,14 @@ public class WalletController {
     }
 
     @PostMapping("/transfer")
+    @Operation(
+            summary = "Transfer funds",
+            description = """
+            Transfers funds from the authenticated user's wallet to another wallet.
+            The recipient is identified by their wallet number.
+            Requires JWT authentication or an API key with **transfer** permission.
+            """
+    )
     public ApiResponse<TransferResponse> transfer(
             @Valid @RequestBody TransferRequest request,
             Authentication authentication,
@@ -189,6 +214,14 @@ public class WalletController {
     }
 
     @GetMapping("/transactions")
+    @Operation(
+            summary = "Get transaction history",
+            description = """
+            Retrieves the complete transaction history for the authenticated user.
+            Returns all deposits, transfers, and other wallet transactions.
+            Requires JWT authentication or an API key with **read** permission.
+            """
+    )
     public ApiResponse<List<TransactionResponse>> getTransactions(
             Authentication authentication,
             HttpServletRequest httpRequest) {
@@ -212,10 +245,11 @@ public class WalletController {
     @Operation(
             summary = "Verify Paystack payment after redirect",
             description = """
-        Callback endpoint for Paystack redirect after customer completes payment.
-        Verifies the transaction with Paystack, updates the deposit status,
-        and returns the final status to the client.
-        """
+            Callback endpoint for Paystack redirect after customer completes payment.
+            Verifies the transaction with Paystack, updates the deposit status in the database,
+            and returns the final transaction status to the client.
+            This endpoint is typically called when the user is redirected back from Paystack.
+            """
     )
     public ApiResponse<DepositStatusResponse> verifyPayment(
             @RequestParam("reference") String reference,

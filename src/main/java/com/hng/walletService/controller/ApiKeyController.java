@@ -34,7 +34,7 @@ public class ApiKeyController {
     @PostMapping("/create")
     @Operation(
             summary = "Create new API key",
-            description = "Create a new API key with specific permissions. Maximum 5 active keys per user."
+            description = "Create a new API key with specific permissions [transfer, deposit, read]. Maximum 5 active keys per user."
     )
     public ResponseEntity<ApiResponse<ApiKeyResponse>> createApiKey(
             @Valid @RequestBody CreateApiKeyRequest request,

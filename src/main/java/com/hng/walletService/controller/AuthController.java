@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
-@Tag(name = "Authentication", description = "Google OAuth authentication endpoints")
+@Tag(name = "Authentication Management", description = "Endpoint for Google OAuth authentication")
 public class AuthController {
 
     private final AuthService authService;
