@@ -58,6 +58,10 @@ public class WalletService {
 
     @Transactional
     public void creditWallet(WalletEntity wallet, BigDecimal amount) {
+        if (wallet == null) {
+            throw new IllegalArgumentException("Wallet does not exist");
+        }
+
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Amount must be positive");
         }
@@ -73,6 +77,10 @@ public class WalletService {
 
     @Transactional
     public void debitWallet(WalletEntity wallet, BigDecimal amount) {
+        if (wallet == null) {
+            throw new IllegalArgumentException("Wallet does not exist");
+        }
+
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Amount must be positive");
         }
